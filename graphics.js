@@ -1,8 +1,10 @@
 class EquilateralTriangle
 {
 
-  constructor(side, coords, rotation)
+  constructor(context, side, coords, rotation)
   {
+    // The graphics context
+    this.ctx = context;
     // The length of a side of the triangle
     this.side = side;
     // The canvas x.y coords of the upper-left corner of the bounding box.
@@ -73,12 +75,22 @@ class EquilateralTriangle
     return this.convertToCanvasCoords(this.boxCoordsForIndex(pointIndex));
   }
 
-  drawInnerArcForIndex(pointIndex, context)
+  // Canvas uses a weird drawing circle, this allows you to use unit circle instead
+  drawNormalizedArc(focusX, focusY, radius, beginArcRadians, endArcRadians, drawCounterClockwise)
+  {
+    this.ctx.arc(focusX, focusY,
+                 radius,
+                 (2 * Math.PI) - beginArcRadians,
+                 (2 * Math.PI) - endArcRadians,
+                 drawCounterClockwise);
+  }
+
+  drawInnerArcForIndex(pointIndex)
   {
     var rotation = (Math.PI / 3) + (pointIndex * ((2 * Math.PI) / 3.0));
-    var amplitude = this.inscribingCircleRadius * 1.1;
+    var amplitude = this.inscribingCircleRadius * 1.0;
 
-    var {x: focusX, y: focusY} = this.convertToCanvasCoords(this.convertToBoxCoords(this.coordsForPoint({rotation: rotation, amplitude: amplitude})))
+    var {x: focusX, y: focusY} = this.convertToCanvasCoords(this.convertToBoxCoords(this.coordsForPoint({rotation: rotation, amplitude: amplitude})));
     console.log(focusX, focusY);
     //console.log(rotation / Math.PI);
 
@@ -93,20 +105,19 @@ class EquilateralTriangle
     
 
     //ctx.moveTo(focusX, focusY);
-    ctx.beginPath();
+    this.ctx.beginPath();
 
-    ctx.arc(focusX, focusY,
-        amplitude * 1.1,             // radius
-        (2 * Math.PI) - degreesToEnd, (2 * Math.PI) - degreesToStart, // Degrees to start, degrees to end: so, draw 1/4 circle
-        false);          // True means draw counterclockwise
+    this.drawNormalizedArc(focusX, focusY,
+        amplitude * 1.0,             // radius
+        degreesToStart, degreesToEnd, // Degrees to start, degrees to end: so, draw 1/4 circle
+        true);          // True means draw counterclockwise
 
-    ctx.stroke();
+    this.ctx.stroke();
   }
 
 
 };
 
-var triangle = new EquilateralTriangle(200, {x: 0, y: 10}, 0);
 
 
 
@@ -119,6 +130,7 @@ var ctx = canvas.getContext('2d');
 ctx.fillStyle = 'rgb(0, 0, 0)';
 ctx.fillRect(0, 0, width, height);
 
+var triangle = new EquilateralTriangle(ctx, 200, {x: 0, y: 10}, 0);
 
 ctx.fillStyle = 'rgb(255, 255, 255)';
 ctx.strokeStyle = 'rgb(255, 255, 255)';
@@ -127,7 +139,7 @@ ctx.lineWidth = 5;
 
 for (var i = 0; i < 3; i++)
 {
-  triangle.drawInnerArcForIndex(i, ctx);
+  triangle.drawInnerArcForIndex(i);
   //var {x: coordX, y: coordY} = triangle.canvasCoordsForIndex(i);
   //ctx.moveTo(coordX, coordY);
   //ctx.beginPath();
